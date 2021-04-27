@@ -1,0 +1,8 @@
+- name: Step 1.
+  import_tasks: step_1.yml
+
+- name: Step 2.
+  import_tasks: step_2.yml
+
+- name: Step 3.
+  import_tasks: step_3.yml

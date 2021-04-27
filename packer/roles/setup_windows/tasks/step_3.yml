@@ -1,0 +1,145 @@
+# 3.a. Disable screensaver -> use ansible: win_regedit, win_dsc
+- name: Step 3.a. Disable ScreenSaver (Registry Settings)
+  ansible.windows.win_regedit:
+    path: 'HKCU:\Control Panel\Desktop'
+    name: ScreenSaveActive
+    data: 0
+    type: dword
+
+- name: Step 3.a. Disable ScreenSaver (Disable Monitor Timeout AC)
+  ansible.windows.win_command: powercfg -x -monitor-timeout-ac 0
+
+- name: Step 3.a. Disable ScreenSaver (Disable Monitor Timeout DC)
+  ansible.windows.win_command: powercfg -x -monitor-timeout-dc 0
+
+#   b. set powerplan -> use ansible: win_powershell + CIM
+- name: Step 3.b. Set PowerPlan to High Performance
+  ansible.windows.win_powershell:
+    script: |
+      # Set power config
+      $HighPerf = Get-CimInstance -Namespace root/CIMV2/power -ClassName Win32_PowerPlan | Where-Object ElementName -EQ 'High performance'
+      Invoke-CimMethod -InputObject $HighPerf -MethodName Activate
+
+#   c. run postinstall -> use ansible; (break down into steps)
+- name: Step 3.c. PostInstall - Enable RDP
+  ansible.windows.win_powershell:
+    script: |
+      # Enable RDP
+      $CIM_TSGeneralSetting = @{
+        Namespace = 'root/CIMV2/terminalservices'
+        ClassName = 'Win32_TSGeneralSetting'
+        Filter    = "TerminalName='RDP-tcp'"
+      }
+      $TSGeneralSetting = Get-CimInstance @CIM_TSGeneralSetting
+
+      $Invoke_TSGeneralSetting = @{
+        InputObject = $TSGeneralSetting
+        MethodName  = 'SetUserAuthenticationRequired'
+        Arguments   = @{
+          UserAuthenticationRequired = 1
+        }
+      }
+      Invoke-CimMethod @Invoke_TSGeneralSetting
+
+      $CIM_TerminalServiceSetting = @{
+        Namespace = 'root/CIMV2/TerminalServices'
+        ClassName = 'Win32_TerminalServiceSetting'
+      }
+      $TerminalServiceSetting = Get-CimInstance @CIM_TerminalServiceSetting
+
+      $Invoke_TerminalServiceSetting = @{
+        InputObject = $TerminalServiceSetting
+        MethodName  = 'SetAllowTSConnections'
+        Arguments   = @{
+          AllowTSConnections      = 1
+          ModifyFirewallException = 1
+        }
+      }
+      Invoke-CimMethod @Invoke_TerminalServiceSetting
+
+- name: Step 3.c. PostInstall - Setting Firewall Rules
+  ansible.windows.win_powershell:
+    script: |
+      $Rules = @(
+        'Remote Desktop'
+        'Windows Remote Management'
+        'Remote Event Log Management'
+        'Remote Service Management'
+        'Windows Firewall Remote Management'
+        'Remote Volume Management'
+        'File and Printer Sharing'
+      )
+
+      $Rules.ForEach({
+        $Rule = @{ DisplayGroup = $_ }
+        Enable-NetFirewallRule @Rule
+      })
+
+- name: Step 3.c. PostInstall - Disabling Shutdown Event Tracker
+  ansible.windows.win_regedit:
+    path: 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability'
+    name: ShutdownReasonUI
+    data: 0
+    type: dword
+
+- name: Step 3.c. PostInstall - Setting Execution Policy to RemoteSigned
+  ansible.windows.win_powershell:
+    script: |
+      Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Force
+
+- name: Step 3.c. PostInstall - Setting file extensions display
+  ansible.windows.win_regedit:
+    path: 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced'
+    name: HideFileExt
+    data: 0
+    type: dword
+
+- name: Step 3.c. PostInstall - Disabling hybernation
+  ansible.windows.win_regedit:
+    path: 'HKLM:\SYSTEM\CurrentControlSet\Control\Power'
+    name: HibernateEnabled
+    data: 0
+    type: dword
+
+- name: Step 3.c. PostInstall - Setting TimeZone
+  ansible.windows.win_command: TZUTIL /s "Pacific Standard Time"
+
+- name: Step 3.c. PostInstall - Disabling Server Manager at Logon
+  ansible.windows.win_regedit:
+    path: 'HKLM:\Software\Microsoft\ServerManager'
+    name: DoNotOpenServerManagerAtLogon
+    data: 1
+    type: dword
+
+- name: Step 3.c. PostInstall - Enabling DiskPerf in Task Manager
+  ansible.windows.win_command: diskperf -Y
+
+- name: Step 3.c. PostInstall - Disabling Server Manager at Logon
+  ansible.windows.win_regedit:
+    path: 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System'
+    name: EnableLUA
+    data: 0
+    type: dword
+
+- name: Step 3.c. PostInstall - Disabling IE Enhanced Security (Install Type Query)
+  ansible.windows.win_reg_stat:
+    path: 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\'
+    name: InstallationType
+  register: install_type
+
+- name: Step 3.c. PostInstall - Disabling IE Enhanced Security (1/2)
+  ansible.windows.win_regedit:
+    path: 'HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}'
+    name: IsInstalled
+    data: 0
+    type: dword
+  when: install_type.value != 'Server Core'
+
+- name: Step 3.c. PostInstall - Disabling IE Enhanced Security (2/2)
+  ansible.windows.win_regedit:
+    path: 'HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}'
+    name: IsInstalled
+    data: 0
+    type: dword
+  when: install_type.value != 'Server Core'
+#   d. run postsetup -> use ansible.

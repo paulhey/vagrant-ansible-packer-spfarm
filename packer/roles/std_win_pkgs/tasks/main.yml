@@ -1,0 +1,8 @@
+- name: Install Standard Windows packages
+  chocolatey.chocolatey.win_chocolatey:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - 7zip
+    - psexec
+    - visualstudiocode

@@ -1,0 +1,20 @@
+- name: Step 1.a. Install vm-guest-tools
+  ansible.builtin.meta: noop
+
+- name: Step 1.b. Install chocolatey
+# ansible.builtin.meta: noop
+  ansible.windows.win_powershell:
+    script: |
+      Set-ExecutionPolicy Bypass -Scope Process -Force
+      [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+      iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+
+- name: Step 1.c. Install chocolatey packages
+  chocolatey.chocolatey.win_chocolatey:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    # - virtualbox-guest-additions-guest.install
+    - 7zip
+    - psexec
+    - visualstudiocode

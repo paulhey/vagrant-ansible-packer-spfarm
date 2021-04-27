@@ -1,0 +1,16 @@
+# Order of tasks
+# 1.a. Install vm-guest-tools -> Leave as is
+#   b. Install chocolatey, -> not needed as win_chocolatey installs it if missing
+#   c. Install chocolatey packages -> use ansible: win_chocolatey
+# 2.a. 'pin' powershell to task bar -> not needed
+#   b. setup winrm service -> use ansible: win_dsc
+# 3.a. Disable screensaver -> use ansible: win_regedit, win_dsc
+#   b. set powerplan -> use ansible: win_powershell + CIM
+#   c. run postinstall -> use ansible; (break down into steps)
+#   d. run postsetup -> use ansible.
+# 4.a. restart
+
+- name: Setup Windows Server 2016
+  hosts: default
+  roles:
+    - setup_windows
