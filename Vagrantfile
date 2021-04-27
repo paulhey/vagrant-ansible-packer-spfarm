@@ -30,7 +30,7 @@ File.open('ansible/hosts_dev_env.yaml', 'w') do |f|
     f.write "#{machine[0]}:\n"
     f.write "   hosts:\n"
     f.write "     #{machine[1]['name']}:\n"
-    f.write "       ansible_ssh_host: #{machine[1]['ip_address']}\n"
+    f.write "       ansible_host: #{machine[1]['ip_address']}\n"
     f.write "       ansible_user: vagrant\n"
     f.write "       ansible_password: vagrant\n"
     f.write "       hostname: #{machine[1]['hostname']}\n"

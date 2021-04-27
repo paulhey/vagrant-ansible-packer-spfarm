@@ -1,6 +1,6 @@
 DomainControllers:
   name: DomainController1
-  box: sharepointoscar/spfarm_base_windows2016
+  box: sp2016_farm_base_windows_2016_virtualbox
   hostname: SP2012R2AD
   role: DomainController
   memory: 1048
@@ -10,7 +10,7 @@ DomainControllers:
 
 Webservers:
   name: WFE1
-  box: sharepointoscar/spfarm_base_windows2016
+  box: sp2016_farm_base_windows_2016_virtualbox
   hostname: sp2016WFE
   role: Front-End
   memory: 2048
@@ -20,7 +20,7 @@ Webservers:
 
 Databases:
   name: Database1
-  box: sharepointoscar/spfarm_base_windows2016
+  box: sp2016_farm_base_windows_2016_virtualbox
   hostname: SP2016SQLSERVER
   role: Database
   memory: 2048
@@ -30,11 +30,10 @@ Databases:
 
 AppServers:
   name: AppServer1
-  box: sharepointoscar/spfarm_base_windows2016
+  box: sp2016_farm_base_windows_2016_virtualbox
   hostname: sp2016AppServer
   role: Application
   memory: 4048
   default: false
   ip_address: 192.168.2.18
   providers: virtualbox
-     
