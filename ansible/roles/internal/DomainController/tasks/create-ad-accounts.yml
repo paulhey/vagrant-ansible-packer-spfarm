@@ -1,32 +1,52 @@
 - name: Add Admin Account to Domain Admins
   win_domain_user:
-    name: vagrant
+    name: vagrant_service
     firstname: Vagrant
     surname: Account
-    upn: vagrant@sposcar.local
+    upn: vagrant_service@sposcar.local
     password: Pass@word1!
     password_never_expires: yes
-    account_locked: no
+    account_locked: false
     state: present
     # path: ou=Users,dc=sposcar,dc=local
     groups_action: add
     groups:
       - Domain Admins
-    street: 24th & Mission Street 
+    street: 24th & Mission Street
     city: San Francisco
     state_province: California
-    postal_code: 94601
+    postal_code: "94601"
     country: US
 
 #Ensure we are Domain Controller
-- win_domain_controller:
+- name: Setup Domain Controller
+  win_domain_controller:
     dns_domain_name: sposcar.local
     domain_admin_user: SPOSCAR\Admin
-    domain_admin_password: Pass@word1!
-    safe_mode_password: Pass@word1!
+    domain_admin_password: "19I$3Mh3h7^m9ZMC@m3"
+    safe_mode_password: "19I$3Mh3h7^m9ZMC@m3"
     state: domain_controller
 
-#create sample Active Directory Users
+# - name: Get Sample User CSV content
+#   community.general.read_csv:
+#     delimiter: ";"
+#     path: "{{ playbook_dir }}/../files/import_create_ad_sample_users.csv"
+#   register: sample_users
+
+# - name: Add Sample Users
+#   win_domain_user:
+#     name: "{{ user['SamAccountName'] }}"
+#   loop: "{{ sample_users.list }}"
+#   loop_control:
+#     loop_var: user
+
+# - name: Get Service User CSV content
+#   community.general.read_csv:
+#     delimiter: ";"
+#     path: "{{ playbook_dir }}/../files/import_create_ad_users.csv"
+#   register: service_users
+
+# create sample Active Directory Users
 - name: Create directory structure
   win_file:
     path: C:\tmp
@@ -57,7 +77,6 @@
     dest: c:\tmp\import_create_ad_users.csv
   remote_user: "{{domain_admin_user}}"
 
-
 - name: Create AD User Accounts
   win_shell: C:\tmp\ImportADUsers.ps1
   remote_user: "{{domain_admin_user}}"
@@ -65,4 +84,3 @@
 - name: Create SharePoint AD Service Accounts
   win_shell: C:\tmp\ImportADServiceAccounts.ps1
   remote_user: "{{domain_admin_user}}"
-

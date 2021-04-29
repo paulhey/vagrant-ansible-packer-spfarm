@@ -18,7 +18,7 @@ error = Vagrant::Errors::VagrantError
 # The vagrant-machines.yaml is at the heart of this solution; it is where we define the servers
 # and their respective roles for the SharePoint farm.  Update this file first, when scaling the farm.
 machines = YAML.load_file 'vagrant-machines.yaml'
-ANSIBLE_RAW_SSH_ARGS = [].freeze
+ANSIBLE_RAW_SSH_ARGS = [] # .freeze
 
 # delete the inventory file if it exists so we can recreate
 File.exist? 'ansible/hosts_dev_env.yaml'
@@ -33,6 +33,7 @@ File.open('ansible/hosts_dev_env.yaml', 'w') do |f|
     f.write "       ansible_host: #{machine[1]['ip_address']}\n"
     f.write "       ansible_user: vagrant\n"
     f.write "       ansible_password: vagrant\n"
+    f.write "       ansible_winrm_transport: basic\n"
     f.write "       hostname: #{machine[1]['hostname']}\n"
   end
 end
@@ -61,6 +62,8 @@ Vagrant.configure(2) do |config|
       # credentials
       cfg.winrm.username = 'vagrant'
       cfg.winrm.password = 'vagrant'
+      cfg.winrm.basic_auth_only = true
+      cfg.winrm.transport = :plaintext
       cfg.vm.guest = :windows
       cfg.vm.communicator = 'winrm'
       cfg.windows.halt_timeout = 35
@@ -88,7 +91,7 @@ Vagrant.configure(2) do |config|
           v.customize ['modifyvm', :id, '--cpus', 2]
           v.customize ['modifyvm', :id, '--vram', 128]
           v.customize ['modifyvm', :id, '--clipboard', 'bidirectional']
-          v.customize ['modifyvm', :id, '--accelerate3d', 'on']
+          # v.customize ['modifyvm', :id, '--accelerate3d', 'on']
           v.customize ['modifyvm', :id, '--accelerate2dvideo', 'on']
         end
       end

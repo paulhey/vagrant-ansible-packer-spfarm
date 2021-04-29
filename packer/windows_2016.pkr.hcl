@@ -100,10 +100,10 @@ variable "winrm_username" {
 }
 
 source "virtualbox-iso" "windows_server_2016" {
-  boot_wait            = "${var.boot_wait}"
-  communicator         = "${var.communicator}"
-  disk_size            = "${var.disk_size}"
-  floppy_files         = [
+  boot_wait    = "${var.boot_wait}"
+  communicator = "${var.communicator}"
+  disk_size    = "${var.disk_size}"
+  floppy_files = [
     "${var.Autounattend_virtualbox}",
     "floppy/WindowsPowershell.lnk",
     "floppy/PinTo10.exe",
@@ -121,19 +121,20 @@ source "virtualbox-iso" "windows_server_2016" {
   output_directory     = "packer_tmp-${var.artifact_name}-virtualbox"
   shutdown_command     = "${var.shutdown_command}"
   shutdown_timeout     = "${var.shutdown_timeout}"
-  vboxmanage           = [
+  vboxmanage = [
     ["modifyvm", "{{ .Name }}", "--cpus", "${var.cpu_cores}"],
     ["modifyvm", "{{ .Name }}", "--memory", "${var.memory_size}"],
-    ["modifyvm", "{{ .Name }}", "--vram", "48"],
-    ["modifyvm", "{{ .Name }}", "--cpuexecutioncap", "95"],
+    ["modifyvm", "{{ .Name }}", "--vram", "128"],
+    # ["modifyvm", "{{ .Name }}", "--cpuexecutioncap", "95"],
     ["modifyvm", "{{ .Name }}", "--clipboard", "bidirectional"]
   ]
-  vm_name              = "tmp-${var.artifact_name}"
-  winrm_insecure       = "${var.winrm_insecure}"
-  winrm_password       = "${var.winrm_password}"
-  winrm_timeout        = "${var.winrm_timeout}"
-  winrm_use_ssl        = "${var.winrm_use_ssl}"
-  winrm_username       = "${var.winrm_username}"
+  vm_name        = "tmp-${var.artifact_name}"
+  winrm_insecure = "${var.winrm_insecure}"
+  winrm_password = "${var.winrm_password}"
+  winrm_timeout  = "${var.winrm_timeout}"
+  winrm_use_ssl  = "${var.winrm_use_ssl}"
+  winrm_username = "${var.winrm_username}"
+  headless       = true
 }
 
 build {
@@ -143,10 +144,6 @@ build {
     execute_command = "{{ .Vars }} cmd /c \"{{ .Path }}\""
     scripts         = ["scripts/vm-guest-tools.bat"]
   }
-
-  # provisioner "powershell" {
-  #   script = "scripts/check-winrm.ps1"
-  # }
 
   provisioner "ansible" {
     playbook_file = "./windows_2016.yml"
@@ -158,18 +155,14 @@ build {
       "-e", "ansible_shell_type=powershell",
       "-e", "ansible_shell_executable=None",
       "-v"
-      # "-e", "ansible_shell_type=powershell",
-      # "-e", "ansible_shell_executable=None",
-      # "-e", "ansible_connection=winrm",
-      # "-e", "ansible_user=vagrant",
-      # "-e", "ansible_password=vagrant",
-      # "-e", "ansible_winrm_transport=credssp"
-      # "-e", "winrm_password={{ .WinRMPassword }}"
-      # "-e", "ansible_port=5985"
     ]
   }
 
   provisioner "windows-restart" {
+  }
+
+  provisioner "powershell" {
+    script = "scripts/reset-winrm.ps1"
   }
 
   post-processor "vagrant" {

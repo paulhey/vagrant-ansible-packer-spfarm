@@ -40,11 +40,12 @@ if exist "C:\Users\vagrant\VBoxGuestAdditions.iso" (
 )
 
 if not exist "C:\Windows\Temp\VBoxGuestAdditions.iso" (
-    powershell -Command "(New-Object System.Net.WebClient).DownloadFile('http://download.virtualbox.org/virtualbox/5.1.20/VBoxGuestAdditions_5.1.20.iso', 'C:\Windows\Temp\VBoxGuestAdditions.iso')" <NUL
+    powershell -Command "(New-Object System.Net.WebClient).DownloadFile('http://download.virtualbox.org/virtualbox/6.1.18/VBoxGuestAdditions_6.1.18.iso', 'C:\Windows\Temp\VBoxGuestAdditions.iso')" <NUL
 )
 
 cmd /c ""C:\Program Files\7-Zip\7z.exe" x C:\Windows\Temp\VBoxGuestAdditions.iso -oC:\Windows\Temp\virtualbox"
-certutil -addstore -f "TrustedPublisher" C:\Windows\Temp\virtualbox\cert\vbox-sha256-r3.cer
+@REM This cert does not exist on the 6.1.18 ISO
+@REM certutil -addstore -f "TrustedPublisher" C:\Windows\Temp\virtualbox\cert\vbox-sha256-r3.cer
 certutil -addstore -f "TrustedPublisher" C:\Windows\Temp\virtualbox\cert\vbox-sha256.cer
 certutil -addstore -f "TrustedPublisher" C:\Windows\Temp\virtualbox\cert\vbox-sha1.cer
 cmd /c C:\Windows\Temp\virtualbox\VBoxWindowsAdditions.exe /S
